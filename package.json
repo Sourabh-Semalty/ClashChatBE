@@ -9,6 +9,10 @@
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "keywords": [
     "chat",
     "socket.io",
