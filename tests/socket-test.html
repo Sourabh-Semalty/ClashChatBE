@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClashChat Socket.io Tester</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .status.disconnected {
+            background: #ef4444;
+        }
+        
+        .status.connected {
+            background: #10b981;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .section h2 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-disconnect {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            margin-top: 10px;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        
+        .logs {
+            grid-column: 1 / -1;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid;
+        }
+        
+        .log-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+        }
+        
+        .log-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+        
+        .log-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        .log-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+        }
+        
+        .timestamp {
+            color: #9ca3af;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+        
+        .clear-logs {
+            background: #374151;
+            margin-bottom: 10px;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 ClashChat Socket.io Tester</h1>
+            <div id="connectionStatus" class="status disconnected">⚫ Disconnected</div>
+            <div id="socketId" style="margin-top: 10px; font-size: 14px; opacity: 0.9;"></div>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>🔐 Connection</h2>
+                <div class="info-box">
+                    <strong>📝 Steps:</strong>
+                    1. Use Postman to login/signup<br>
+                    2. Copy the accessToken<br>
+                    3. Paste it below and connect
+                </div>
+                <div class="form-group">
+                    <label for="accessToken">Access Token</label>
+                    <textarea id="accessToken" placeholder="Paste your JWT access token here..."></textarea>
+                </div>
+                <button id="connectBtn" onclick="connectSocket()">🔌 Connect to Socket.io</button>
+                <button class="btn-disconnect" id="disconnectBtn" onclick="disconnectSocket()" disabled>🔴 Disconnect</button>
+            </div>
+            
+            <div class="section">
+                <h2>💬 Send Message</h2>
+                <div class="form-group">
+                    <label for="receiverId">Receiver User ID</label>
+                    <input type="text" id="receiverId" placeholder="507f1f77bcf86cd799439011">
+                </div>
+                <div class="form-group">
+                    <label for="messageContent">Message Content</label>
+                    <textarea id="messageContent" placeholder="Type your message here...">Hello! This is a test message.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="messageType">Message Type</label>
+                    <select id="messageType" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                        <option value="text">Text</option>
+                        <option value="image">Image</option>
+                        <option value="file">File</option>
+                    </select>
+                </div>
+                <button onclick="sendMessage()" id="sendMessageBtn" disabled>📤 Send Message</button>
+            </div>
+            
+            <div class="section">
+                <h2>⌨️ Typing Indicators</h2>
+                <div class="form-group">
+                    <label for="typingReceiverId">Receiver User ID</label>
+                    <input type="text" id="typingReceiverId" placeholder="507f1f77bcf86cd799439011">
+                </div>
+                <button onclick="sendTyping()" class="btn-small" disabled id="typingBtn">⌨️ Start Typing</button>
+                <button onclick="sendStopTyping()" class="btn-small" disabled id="stopTypingBtn">🛑 Stop Typing</button>
+            </div>
+            
+            <div class="section">
+                <h2>✓✓ Mark as Read</h2>
+                <div class="form-group">
+                    <label for="messageId">Message ID</label>
+                    <input type="text" id="messageId" placeholder="507f1f77bcf86cd799439013">
+                </div>
+                <button onclick="markAsRead()" class="btn-small" disabled id="readBtn">✓ Mark as Read</button>
+            </div>
+        </div>
+        
+        <div style="padding: 0 30px 30px 30px;">
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;">📋 Event Logs</h2>
+                    <button class="clear-logs" onclick="clearLogs()">🗑️ Clear Logs</button>
+                </div>
+                <div id="logs" class="logs"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span>${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('Logs cleared', 'info');
+        }
+        
+        function updateConnectionStatus(connected, socketId = '') {
+            const statusDiv = document.getElementById('connectionStatus');
+            const socketIdDiv = document.getElementById('socketId');
+            
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '🟢 Connected';
+                socketIdDiv.textContent = `Socket ID: ${socketId}`;
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '⚫ Disconnected';
+                socketIdDiv.textContent = '';
+            }
+            
+            document.getElementById('connectBtn').disabled = connected;
+            document.getElementById('disconnectBtn').disabled = !connected;
+            document.getElementById('sendMessageBtn').disabled = !connected;
+            document.getElementById('typingBtn').disabled = !connected;
+            document.getElementById('stopTypingBtn').disabled = !connected;
+            document.getElementById('readBtn').disabled = !connected;
+        }
+        
+        function connectSocket() {
+            const token = document.getElementById('accessToken').value.trim();
+            
+            if (!token) {
+                alert('⚠️ Please enter an access token!');
+                return;
+            }
+            
+            log('🔄 Attempting to connect to Socket.io server...', 'info');
+            
+            socket = io('http://localhost:5000', {
+                auth: {
+                    token: token
+                },
+                transports: ['websocket', 'polling']
+            });
+            
+            socket.on('connect', () => {
+                log(`✅ Successfully connected! Socket ID: ${socket.id}`, 'success');
+                updateConnectionStatus(true, socket.id);
+            });
+            
+            socket.on('connect_error', (error) => {
+                log(`❌ Connection error: ${error.message}`, 'error');
+                updateConnectionStatus(false);
+            });
+            
+            socket.on('user_online', (data) => {
+                log(`👤 User came online: ${data.userId}`, 'success');
+            });
+            
+            socket.on('user_offline', (data) => {
+                log(`👤 User went offline: ${data.userId}`, 'warning');
+            });
+            
+            socket.on('receive_message', (data) => {
+                log(`📨 New message received from ${data.sender.username}: "${data.content}"`, 'success');
+                log(`📊 Message details: ${JSON.stringify(data, null, 2)}`, 'info');
+            });
+            
+            socket.on('message_sent', (data) => {
+                log(`✅ Message sent successfully to ${data.receiver.username}`, 'success');
+                log(`📊 Message details: ${JSON.stringify(data, null, 2)}`, 'info');
+            });
+            
+            socket.on('typing', (data) => {
+                log(`⌨️ User ${data.userId} is typing...`, 'info');
+            });
+            
+            socket.on('stop_typing', (data) => {
+                log(`🛑 User ${data.userId} stopped typing`, 'info');
+            });
+            
+            socket.on('message_read', (data) => {
+                log(`✓✓ Message ${data.messageId} was read`, 'success');
+            });
+            
+            socket.on('error', (data) => {
+                log(`❌ Error: ${data.message}`, 'error');
+            });
+            
+            socket.on('disconnect', (reason) => {
+                log(`🔴 Disconnected: ${reason}`, 'warning');
+                updateConnectionStatus(false);
+            });
+        }
+        
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('🔴 Manually disconnected from server', 'warning');
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function sendMessage() {
+            const receiverId = document.getElementById('receiverId').value.trim();
+            const content = document.getElementById('messageContent').value.trim();
+            const messageType = document.getElementById('messageType').value;
+            
+            if (!receiverId || !content) {
+                alert('⚠️ Please fill in receiver ID and message content!');
+                return;
+            }
+            
+            if (socket && socket.connected) {
+                socket.emit('send_message', {
+                    receiverId: receiverId,
+                    content: content,
+                    messageType: messageType
+                });
+                log(`📤 Sending message to ${receiverId}: "${content}"`, 'info');
+            } else {
+                alert('⚠️ Not connected to socket server!');
+            }
+        }
+        
+        function sendTyping() {
+            const receiverId = document.getElementById('typingReceiverId').value.trim();
+            
+            if (!receiverId) {
+                alert('⚠️ Please enter receiver ID!');
+                return;
+            }
+            
+            if (socket && socket.connected) {
+                socket.emit('typing', { receiverId: receiverId });
+                log(`⌨️ Sent typing indicator to ${receiverId}`, 'info');
+            }
+        }
+        
+        function sendStopTyping() {
+            const receiverId = document.getElementById('typingReceiverId').value.trim();
+            
+            if (!receiverId) {
+                alert('⚠️ Please enter receiver ID!');
+                return;
+            }
+            
+            if (socket && socket.connected) {
+                socket.emit('stop_typing', { receiverId: receiverId });
+                log(`🛑 Sent stop typing to ${receiverId}`, 'info');
+            }
+        }
+        
+        function markAsRead() {
+            const messageId = document.getElementById('messageId').value.trim();
+            
+            if (!messageId) {
+                alert('⚠️ Please enter message ID!');
+                return;
+            }
+            
+            if (socket && socket.connected) {
+                socket.emit('message_read', { messageId: messageId });
+                log(`✓ Marked message ${messageId} as read`, 'info');
+            }
+        }
+        
+        log('🎉 Socket.io Tester loaded successfully!', 'success');
+        log('📝 Follow the steps in the Connection section to get started', 'info');
+    </script>
+</body>
+</html>

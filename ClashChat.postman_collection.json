@@ -1,0 +1,687 @@
+{
+  "info": {
+    "name": "ClashChat API",
+    "description": "Complete API collection for ClashChat - Real-time chat application with Socket.io",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "friendId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "    pm.collectionVariables.set('userId', jsonData.data.user.id);",
+                  "    pm.test('User registered successfully', function () {",
+                  "        pm.response.to.have.status(201);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Register a new user account. Returns user details along with access and refresh tokens."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/signup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "signup"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\",\n      \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\",\n      \"status\": \"offline\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "    pm.collectionVariables.set('userId', jsonData.data.user.id);",
+                  "    pm.test('Login successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with email and password. Returns user details and authentication tokens."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\",\n      \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\",\n      \"status\": \"online\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "    pm.test('Token refreshed successfully', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Refresh access token using refresh token. Returns new access and refresh tokens."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/refresh",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "refresh"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed successfully\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout current user. Requires authentication token."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "logout"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Friends",
+      "item": [
+        {
+          "name": "Get All Friends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/friends",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "friends"]
+            },
+            "description": "Get list of all accepted friends. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/friends",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "friends"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Friends retrieved successfully\",\n  \"data\": {\n    \"friends\": [\n      {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"username\": \"jane_smith\",\n        \"email\": \"jane@example.com\",\n        \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=jane_smith\",\n        \"status\": \"online\",\n        \"lastSeen\": \"2024-12-24T12:30:00.000Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/friends/search?query=john",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "friends", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "john",
+                  "description": "Search term for username or email"
+                }
+              ]
+            },
+            "description": "Search for users by username or email. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/friends/search?query=john",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "friends", "search"],
+                  "query": [
+                    {
+                      "key": "query",
+                      "value": "john"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Users found\",\n  \"data\": {\n    \"users\": [\n      {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"username\": \"john_doe\",\n        \"email\": \"john@example.com\",\n        \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\",\n        \"status\": \"online\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Pending Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/friends/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "friends", "requests"]
+            },
+            "description": "Get all pending friend requests received by the current user. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/friends/requests",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "friends", "requests"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Pending requests retrieved\",\n  \"data\": {\n    \"requests\": [\n      {\n        \"_id\": \"507f1f77bcf86cd799439012\",\n        \"requester\": {\n          \"_id\": \"507f1f77bcf86cd799439011\",\n          \"username\": \"john_doe\",\n          \"email\": \"john@example.com\",\n          \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\",\n          \"status\": \"online\"\n        },\n        \"status\": \"pending\",\n        \"createdAt\": \"2024-12-24T12:00:00.000Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Friend Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('requestId', jsonData.data.friendship._id);",
+                  "    pm.test('Friend request sent', function () {",
+                  "        pm.response.to.have.status(201);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"507f1f77bcf86cd799439011\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/friends/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "friends", "add"]
+            },
+            "description": "Send a friend request to another user. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"recipientId\": \"507f1f77bcf86cd799439011\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/friends/add",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "friends", "add"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Friend request sent\",\n  \"data\": {\n    \"friendship\": {\n      \"_id\": \"507f1f77bcf86cd799439012\",\n      \"requester\": \"507f1f77bcf86cd799439010\",\n      \"recipient\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"username\": \"jane_smith\",\n        \"email\": \"jane@example.com\",\n        \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=jane_smith\"\n      },\n      \"status\": \"pending\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Accept Friend Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('friendId', jsonData.data.friendship.requester._id);",
+                  "    pm.test('Friend request accepted', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/friends/accept/{{requestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "friends", "accept", "{{requestId}}"]
+            },
+            "description": "Accept a pending friend request. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/friends/accept/507f1f77bcf86cd799439012",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "friends", "accept", "507f1f77bcf86cd799439012"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Friend request accepted\",\n  \"data\": {\n    \"friendship\": {\n      \"_id\": \"507f1f77bcf86cd799439012\",\n      \"requester\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"username\": \"john_doe\",\n        \"email\": \"john@example.com\",\n        \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\",\n        \"status\": \"online\"\n      },\n      \"status\": \"accepted\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove Friend",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/friends/remove/{{friendId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "friends", "remove", "{{friendId}}"]
+            },
+            "description": "Remove a friend or reject a friend request. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/friends/remove/507f1f77bcf86cd799439011",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "friends", "remove", "507f1f77bcf86cd799439011"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Friend removed successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/{{friendId}}?limit=50&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "{{friendId}}"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of messages to retrieve (default: 50)"
+                },
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Number of messages to skip for pagination (default: 0)"
+                }
+              ]
+            },
+            "description": "Get message history with a specific friend. Automatically marks unread messages as read. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/messages/507f1f77bcf86cd799439011?limit=50&skip=0",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "messages", "507f1f77bcf86cd799439011"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    },
+                    {
+                      "key": "skip",
+                      "value": "0"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Messages retrieved successfully\",\n  \"data\": {\n    \"messages\": [\n      {\n        \"_id\": \"507f1f77bcf86cd799439013\",\n        \"sender\": {\n          \"_id\": \"507f1f77bcf86cd799439010\",\n          \"username\": \"john_doe\",\n          \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\"\n        },\n        \"receiver\": {\n          \"_id\": \"507f1f77bcf86cd799439011\",\n          \"username\": \"jane_smith\",\n          \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=jane_smith\"\n        },\n        \"content\": \"Hello! How are you?\",\n        \"messageType\": \"text\",\n        \"status\": \"read\",\n        \"createdAt\": \"2024-12-24T12:30:00.000Z\"\n      }\n    ],\n    \"unreadCount\": 3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{friendId}}\",\n  \"content\": \"Hello! How are you doing?\",\n  \"messageType\": \"text\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "send"]
+            },
+            "description": "Send a message to a friend. Message types: text, image, file. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"receiverId\": \"507f1f77bcf86cd799439011\",\n  \"content\": \"Hello! How are you doing?\",\n  \"messageType\": \"text\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/messages/send",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "messages", "send"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Message sent successfully\",\n  \"data\": {\n    \"message\": {\n      \"_id\": \"507f1f77bcf86cd799439013\",\n      \"sender\": {\n        \"_id\": \"507f1f77bcf86cd799439010\",\n        \"username\": \"john_doe\",\n        \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe\"\n      },\n      \"receiver\": {\n        \"_id\": \"507f1f77bcf86cd799439011\",\n        \"username\": \"jane_smith\",\n        \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=jane_smith\"\n      },\n      \"content\": \"Hello! How are you doing?\",\n      \"messageType\": \"text\",\n      \"status\": \"sent\",\n      \"createdAt\": \"2024-12-24T12:30:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
