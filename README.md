@@ -258,7 +258,7 @@ ISC License
 
 ### 👨‍💻 Author
 
-[Your Name]
+[Sourabh Semalty](https://github.com/Sourabh-Semalty)
 
 ### 🔗 Links
 
