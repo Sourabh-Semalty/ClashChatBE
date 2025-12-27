@@ -13,7 +13,7 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 5000}`,
+        url: process.env.NODE_ENV !== 'development' ? 'https://clashchatbe-production.up.railway.app/': `http://localhost:${process.env.PORT || 5000}`,
         description: 'Development server',
       },
     ],

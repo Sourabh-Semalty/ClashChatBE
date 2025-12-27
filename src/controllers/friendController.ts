@@ -27,6 +27,20 @@ export const getFriends = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find()
+      .select('username email avatar status')
+      .limit(20)
+      .sort({ createdAt: -1 });
+
+    sendSuccess(res, 'Users found', { users, count: users.length });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    sendError(res, 'Failed to retrieve users', error instanceof Error ? error.message : 'Unknown error', 500);
+  }
+};
+
 export const searchUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const { query } = req.query;

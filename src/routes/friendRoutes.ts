@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import {
   getFriends,
+  getAllUsers,
   searchUsers,
   sendFriendRequest,
   acceptFriendRequest,
@@ -11,9 +12,6 @@ import {
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
-
-router.use(authenticate);
-
 /**
  * @swagger
  * /api/friends:
@@ -68,6 +66,69 @@ router.use(authenticate);
  *         description: Unauthorized
  *       500:
  *         description: Failed to retrieve friends
+ */
+
+/**
+ * @swagger
+ * /api/friends/all:
+ *   get:
+ *     summary: Get all users (public endpoint)
+ *     description: Retrieve a list of all users in the system. Limited to 20 users. This is a public endpoint that doesn't require authentication.
+ *     tags: [Friends]
+ *     responses:
+ *       200:
+ *         description: Users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Users found
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 507f1f77bcf86cd799439011
+ *                           username:
+ *                             type: string
+ *                             example: john_doe
+ *                           email:
+ *                             type: string
+ *                             example: john@example.com
+ *                           avatar:
+ *                             type: string
+ *                             example: https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe
+ *                           status:
+ *                             type: string
+ *                             enum: [online, offline, away]
+ *                             example: offline
+ *       500:
+ *         description: Failed to retrieve users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Failed to retrieve users
+ *                 error:
+ *                   type: string
+ *                   example: Database connection error
  */
 
 /**
@@ -383,11 +444,13 @@ router.use(authenticate);
 // ROUTES
 // ============================================
 
-router.get('/', getFriends);
-router.get('/search', searchUsers);
-router.get('/requests', getPendingRequests);
+router.get('/', authenticate, getFriends);
+router.get('/all', getAllUsers);
+router.get('/search', authenticate, searchUsers);
+router.get('/requests', authenticate, getPendingRequests);
 router.post(
   '/add',
+  authenticate,
   [
     body('recipientId')
       .notEmpty()
