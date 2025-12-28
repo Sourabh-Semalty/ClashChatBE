@@ -31,7 +31,9 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
   try {
     const userId = req.userId;
 
-    const users = await User.find()
+    const users = await User.find({
+      _id: { $nin: [userId] }
+    })
       .select('username email avatar status')
       .limit(20)
       .sort({ createdAt: -1 });
