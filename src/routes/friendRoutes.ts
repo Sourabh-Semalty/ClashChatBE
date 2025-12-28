@@ -6,6 +6,7 @@ import {
   searchUsers,
   sendFriendRequest,
   acceptFriendRequest,
+  rejectFriendRequest,
   removeFriend,
   getPendingRequests,
 } from '../controllers/friendController';
@@ -72,9 +73,11 @@ const router = Router();
  * @swagger
  * /api/friends/all:
  *   get:
- *     summary: Get all users (public endpoint)
- *     description: Retrieve a list of all users in the system. Limited to 20 users. This is a public endpoint that doesn't require authentication.
+ *     summary: Get all users with friendship status
+ *     description: Retrieve a list of all users in the system with their friendship status relative to the authenticated user. Shows if users are friends, have pending requests, or no relationship. Limited to 20 users.
  *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Users retrieved successfully
@@ -113,6 +116,19 @@ const router = Router();
  *                             type: string
  *                             enum: [online, offline, away]
  *                             example: offline
+ *                           friendshipStatus:
+ *                             type: string
+ *                             enum: [self, friends, request_sent, request_received, rejected, none]
+ *                             description: |
+ *                               - self: The user themselves
+ *                               - friends: Already friends
+ *                               - request_sent: Current user sent a friend request
+ *                               - request_received: Current user received a friend request
+ *                               - rejected: Friend request was rejected
+ *                               - none: No relationship
+ *                             example: none
+ *       401:
+ *         description: Unauthorized - Authentication required
  *       500:
  *         description: Failed to retrieve users
  *         content:
@@ -402,6 +418,76 @@ const router = Router();
 
 /**
  * @swagger
+ * /api/friends/reject/{requestId}:
+ *   put:
+ *     summary: Reject friend request
+ *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 507f1f77bcf86cd799439012
+ *         description: Friend request ID
+ *     responses:
+ *       200:
+ *         description: Friend request rejected
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Friend request rejected
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     friendship:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           example: 507f1f77bcf86cd799439012
+ *                         requester:
+ *                           type: object
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                               example: 507f1f77bcf86cd799439011
+ *                             username:
+ *                               type: string
+ *                               example: john_doe
+ *                             email:
+ *                               type: string
+ *                               example: john@example.com
+ *                             avatar:
+ *                               type: string
+ *                               example: https://api.dicebear.com/7.x/avataaars/svg?seed=john_doe
+ *                             status:
+ *                               type: string
+ *                               example: online
+ *                         status:
+ *                           type: string
+ *                           example: rejected
+ *       400:
+ *         description: Invalid request ID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Friend request not found
+ *       500:
+ *         description: Failed to reject friend request
+ */
+
+/**
+ * @swagger
  * /api/friends/remove/{friendId}:
  *   delete:
  *     summary: Remove friend
@@ -445,7 +531,7 @@ const router = Router();
 // ============================================
 
 router.get('/', authenticate, getFriends);
-router.get('/all', getAllUsers);
+router.get('/all', authenticate, getAllUsers);
 router.get('/search', authenticate, searchUsers);
 router.get('/requests', authenticate, getPendingRequests);
 router.post(
@@ -458,7 +544,9 @@ router.post(
   ],
   sendFriendRequest
 );
-router.put('/accept/:requestId', acceptFriendRequest);
-router.delete('/remove/:friendId', removeFriend);
+router.put('/accept/:requestId', authenticate, acceptFriendRequest);
+router.put('/reject/:requestId', authenticate, rejectFriendRequest);
+
+router.delete('/remove/:friendId', authenticate, removeFriend);
 
 export default router;
