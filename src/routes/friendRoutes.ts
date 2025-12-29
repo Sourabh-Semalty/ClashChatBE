@@ -74,10 +74,28 @@ const router = Router();
  * /api/friends/all:
  *   get:
  *     summary: Get all users with friendship status
- *     description: Retrieve a list of all users in the system with their friendship status relative to the authenticated user. Shows if users are friends, have pending requests, or no relationship. Limited to 20 users.
+ *     description: Retrieve a paginated list of all users in the system with their friendship status relative to the authenticated user. Shows if users are friends, have pending requests, or no relationship. Supports offset-based pagination.
  *     tags: [Friends]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of users per page
+ *         example: 20
  *     responses:
  *       200:
  *         description: Users retrieved successfully
@@ -95,7 +113,7 @@ const router = Router();
  *                 data:
  *                   type: object
  *                   properties:
- *                     users:
+ *                     data:
  *                       type: array
  *                       items:
  *                         type: object
@@ -127,6 +145,37 @@ const router = Router();
  *                               - rejected: Friend request was rejected
  *                               - none: No relationship
  *                             example: none
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                           description: Current page number
+ *                           example: 1
+ *                         limit:
+ *                           type: integer
+ *                           description: Number of items per page
+ *                           example: 20
+ *                         offset:
+ *                           type: integer
+ *                           description: Number of items skipped
+ *                           example: 0
+ *                         total:
+ *                           type: integer
+ *                           description: Total number of users available
+ *                           example: 150
+ *                         totalPages:
+ *                           type: integer
+ *                           description: Total number of pages
+ *                           example: 8
+ *                         hasNextPage:
+ *                           type: boolean
+ *                           description: Whether there is a next page
+ *                           example: true
+ *                         hasPrevPage:
+ *                           type: boolean
+ *                           description: Whether there is a previous page
+ *                           example: false
  *       401:
  *         description: Unauthorized - Authentication required
  *       500:
