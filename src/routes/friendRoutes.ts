@@ -9,6 +9,7 @@ import {
   rejectFriendRequest,
   removeFriend,
   getPendingRequests,
+  getSentRequests,
 } from '../controllers/friendController';
 import { authenticate } from '../middleware/auth';
 
@@ -323,6 +324,69 @@ const router = Router();
 
 /**
  * @swagger
+ * /api/friends/requests/sent:
+ *   get:
+ *     summary: Get sent friend requests
+ *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sent requests retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Sent requests retrieved
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     requests:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 507f1f77bcf86cd799439012
+ *                           recipient:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 example: 507f1f77bcf86cd799439011
+ *                               username:
+ *                                 type: string
+ *                                 example: jane_smith
+ *                               email:
+ *                                 type: string
+ *                                 example: jane@example.com
+ *                               avatar:
+ *                                 type: string
+ *                                 example: https://api.dicebear.com/7.x/avataaars/svg?seed=jane_smith
+ *                               status:
+ *                                 type: string
+ *                                 example: online
+ *                           status:
+ *                             type: string
+ *                             example: pending
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to retrieve sent requests
+ */
+
+/**
+ * @swagger
  * /api/friends/add:
  *   post:
  *     summary: Send friend request
@@ -583,6 +647,7 @@ router.get('/', authenticate, getFriends);
 router.get('/all', authenticate, getAllUsers);
 router.get('/search', authenticate, searchUsers);
 router.get('/requests', authenticate, getPendingRequests);
+router.get('/requests/sent', authenticate, getSentRequests);
 router.post(
   '/add',
   authenticate,

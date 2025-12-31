@@ -389,3 +389,29 @@ export const getPendingRequests = async (
     );
   }
 };
+
+export const getSentRequests = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.userId;
+
+    const sentRequests = await Friendship.find({
+      requester: userId,
+      status: "pending",
+    }).populate("recipient", "username email avatar status");
+
+    sendSuccess(res, "Sent requests retrieved", {
+      requests: sentRequests,
+    });
+  } catch (error) {
+    console.error("Get sent requests error:", error);
+    sendError(
+      res,
+      "Failed to retrieve sent requests",
+      error instanceof Error ? error.message : "Unknown error",
+      500
+    );
+  }
+};
