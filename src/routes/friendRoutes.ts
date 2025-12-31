@@ -468,7 +468,7 @@ const router = Router();
 /**
  * @swagger
  * /api/friends/reject/{requestId}:
- *   put:
+ *   delete:
  *     summary: Reject friend request
  *     tags: [Friends]
  *     security:
@@ -594,8 +594,7 @@ router.post(
   sendFriendRequest
 );
 router.put('/accept/:requestId', authenticate, acceptFriendRequest);
-router.put('/reject/:requestId', authenticate, rejectFriendRequest);
-
+router.delete('/reject/:requestId', authenticate, rejectFriendRequest);
 router.delete('/remove/:friendId', authenticate, removeFriend);
 
 export default router;

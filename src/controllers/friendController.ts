@@ -301,12 +301,10 @@ export const rejectFriendRequest = async (
       return;
     }
 
-    friendship.status = "rejected";
-    await friendship.save();
-
-    await friendship.populate("requester", "username email avatar status");
-
-    sendSuccess(res, "Friend request rejected", { friendship });
+    await Friendship.deleteOne({ _id: requestId });
+    sendSuccess(res, "Friend request rejected", { 
+      message: "Request deleted, user can send a new request if needed" 
+    });
   } catch (error) {
     console.error("Reject friend request error:", error);
     sendError(
