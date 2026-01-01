@@ -287,7 +287,10 @@ export const rejectFriendRequest = async (
 
     const friendship = await Friendship.findOne({
       _id: requestId,
-      recipient: userId,
+      $or: [
+        { recipient: userId },
+        { requester: userId }
+      ],
       status: "pending",
     });
 
@@ -301,8 +304,11 @@ export const rejectFriendRequest = async (
       return;
     }
 
+    const isRequester = friendship.requester.toString() === userId;
+    const action = isRequester ? "cancelled" : "rejected";
+
     await Friendship.deleteOne({ _id: requestId });
-    sendSuccess(res, "Friend request rejected", { 
+    sendSuccess(res, `Friend request ${action}`, { 
       message: "Request deleted, user can send a new request if needed" 
     });
   } catch (error) {
