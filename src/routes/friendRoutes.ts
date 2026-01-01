@@ -260,7 +260,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/friends/requests:
+ * /api/friends/requests/pending:
  *   get:
  *     summary: Get pending friend requests
  *     tags: [Friends]
@@ -646,7 +646,7 @@ const router = Router();
 router.get('/', authenticate, getFriends);
 router.get('/all', authenticate, getAllUsers);
 router.get('/search', authenticate, searchUsers);
-router.get('/requests', authenticate, getPendingRequests);
+router.get('/requests/pending', authenticate, getPendingRequests);
 router.get('/requests/sent', authenticate, getSentRequests);
 router.post(
   '/add',
