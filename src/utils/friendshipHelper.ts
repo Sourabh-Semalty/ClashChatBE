@@ -39,17 +39,17 @@ export const mapUserWithFriendshipStatus = (
 
   if (friendship) {
     if (friendship.status === "accepted") {
-      return { ...userObj, friendshipStatus: "friends" as FriendshipStatus };
+      return { ...userObj, friendshipStatus: "friends" as FriendshipStatus, friendRequestId: friendship._id };
     } else if (friendship.status === "pending") {
       if (friendship.requester.toString() === userId) {
-        return { ...userObj, friendshipStatus: "request_sent" as FriendshipStatus };
+        return { ...userObj, friendshipStatus: "request_sent" as FriendshipStatus, friendRequestId: friendship._id };
       } else {
-        return { ...userObj, friendshipStatus: "request_received" as FriendshipStatus };
+        return { ...userObj, friendshipStatus: "request_received" as FriendshipStatus, friendRequestId: friendship._id };
       }
     } else if (friendship.status === "rejected") {
-      return { ...userObj, friendshipStatus: "rejected" as FriendshipStatus };
+      return { ...userObj, friendshipStatus: "rejected" as FriendshipStatus, friendRequestId: friendship._id };
     }
   }
 
-  return { ...userObj, friendshipStatus: "none" as FriendshipStatus };
+  return { ...userObj, friendshipStatus: "none" as FriendshipStatus, friendRequestId: null };
 };
