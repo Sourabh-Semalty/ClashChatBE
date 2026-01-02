@@ -69,6 +69,7 @@ export const setupSocketHandlers = (io: Server): void => {
       content: string;
       messageType?: 'text' | 'image' | 'file';
     }) => {
+      console.log('------send_message--------', data)
       try {
         const { receiverId, content, messageType = 'text' } = data;
 
@@ -110,6 +111,7 @@ export const setupSocketHandlers = (io: Server): void => {
     });
 
     socket.on('typing', (data: { receiverId: string }) => {
+      console.log('------typing--------', data)
       const receiverSocketId = onlineUsers.get(data.receiverId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('typing', { userId });
@@ -117,6 +119,7 @@ export const setupSocketHandlers = (io: Server): void => {
     });
 
     socket.on('stop_typing', (data: { receiverId: string }) => {
+      console.log('------stop_typing--------', data)
       const receiverSocketId = onlineUsers.get(data.receiverId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('stop_typing', { userId });
@@ -124,7 +127,8 @@ export const setupSocketHandlers = (io: Server): void => {
     });
 
     socket.on('message_read', async (data: { messageId: string }) => {
-      try {
+      console.log('------message_read--------', data)
+        try {
         const message = await Message.findById(data.messageId);
         if (message && message.receiver.toString() === userId) {
           message.status = 'read';
