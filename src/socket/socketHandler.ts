@@ -70,9 +70,15 @@ export const setupSocketHandlers = (io: Server): void => {
       messageType?: 'text' | 'image' | 'file';
     }) => {
       console.log('------send_message--------', data)
-      console.log('-------userId-------', userId)
+      console.log('-------userId (sender)-------', userId)
       try {
         const { receiverId, content, messageType = 'text' } = data;
+
+        if (userId === receiverId) {
+          socket.emit('error', { message: 'Cannot send message to yourself' });
+          console.error('User attempted to send message to themselves:', userId);
+          return;
+        }
 
         const friendship = await Friendship.findOne({
           $or: [
