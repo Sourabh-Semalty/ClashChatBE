@@ -70,6 +70,7 @@ export const setupSocketHandlers = (io: Server): void => {
       messageType?: 'text' | 'image' | 'file';
     }) => {
       console.log('------send_message--------', data)
+      console.log('-------userId-------', userId)
       try {
         const { receiverId, content, messageType = 'text' } = data;
 
