@@ -102,3 +102,90 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
     sendError(res, 'Failed to send message', error instanceof Error ? error.message : 'Unknown error', 500);
   }
 };
+
+export const getChats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    const { limit = 20, skip = 0 } = req.query;
+
+    const friendships = await Friendship.find({
+      $or: [
+        { requester: userId },
+        { recipient: userId },
+      ],
+      status: 'accepted',
+    })
+      .populate('requester recipient', 'username avatar')
+      .sort({ updatedAt: -1 });
+
+    const chats = await Promise.all(
+      friendships.map(async (friendship) => {
+        const friendId = friendship.requester._id.toString() === userId 
+          ? friendship.recipient._id 
+          : friendship.requester._id;
+
+        const friend = friendship.requester._id.toString() === userId 
+          ? friendship.recipient as any
+          : friendship.requester as any;
+
+        const lastMessage = await Message.findOne({
+          $or: [
+            { sender: userId, receiver: friendId },
+            { sender: friendId, receiver: userId },
+          ],
+        })
+          .sort({ createdAt: -1 })
+          .populate('sender receiver', 'username avatar');
+
+        const unreadCount = await Message.countDocuments({
+          sender: friendId,
+          receiver: userId,
+          status: { $ne: 'read' },
+        });
+
+        return {
+          friendId,
+          friend: {
+            _id: friend._id,
+            username: friend.username,
+            avatar: friend.avatar,
+          },
+          lastMessage: lastMessage ? {
+            _id: lastMessage._id,
+            content: lastMessage.content,
+            messageType: lastMessage.messageType,
+            status: lastMessage.status,
+            createdAt: lastMessage.createdAt,
+            sender: {
+              _id: (lastMessage.sender as any)._id,
+              username: (lastMessage.sender as any).username,
+            },
+          } : null,
+          unreadCount,
+          updatedAt: friendship.updatedAt,
+        };
+      })
+    );
+
+    const sortedChats = chats.sort((a, b) => {
+      if (!a.lastMessage && !b.lastMessage) {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+      if (!a.lastMessage) return 1;
+      if (!b.lastMessage) return -1;
+      return new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime();
+    });
+
+    const paginatedChats = sortedChats
+      .slice(Number(skip), Number(skip) + Number(limit));
+
+    sendSuccess(res, 'Chats retrieved successfully', {
+      chats: paginatedChats,
+      total: chats.length,
+      hasMore: Number(skip) + Number(limit) < chats.length,
+    });
+  } catch (error) {
+    console.error('Get chats error:', error);
+    sendError(res, 'Failed to retrieve chats', error instanceof Error ? error.message : 'Unknown error', 500);
+  }
+};
