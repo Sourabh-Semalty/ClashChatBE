@@ -18,10 +18,24 @@ const router = Router();
  * @swagger
  * /api/friends:
  *   get:
- *     summary: Get all friends
+ *     summary: Get all friends with pagination
  *     tags: [Friends]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: The page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *           maximum: 50
+ *         description: The number of items per page (max 50)
  *     responses:
  *       200:
  *         description: Friends retrieved successfully
@@ -35,40 +49,51 @@ const router = Router();
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Friends retrieved successfully
+ *                   example: "Friends retrieved successfully"
  *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
  *                   type: object
  *                   properties:
- *                     friends:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           _id:
- *                             type: string
- *                             example: 507f1f77bcf86cd799439011
- *                           username:
- *                             type: string
- *                             example: jane_smith
- *                           email:
- *                             type: string
- *                             example: jane@example.com
- *                           avatar:
- *                             type: string
- *                             example: https://api.dicebear.com/7.x/avataaars/svg?seed=jane_smith
- *                           status:
- *                             type: string
- *                             enum: [online, offline, away]
- *                             example: online
- *                           lastSeen:
- *                             type: string
- *                             format: date-time
- *                             example: 2024-12-24T12:30:00.000Z
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 20
+ *                     offset:
+ *                       type: integer
+ *                       example: 0
+ *                     total:
+ *                       type: integer
+ *                       example: 42
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPrevPage:
+ *                       type: boolean
+ *                       example: false
+ *                     nextPage:
+ *                       type: integer
+ *                       nullable: true
+ *                       example: 2
+ *                     prevPage:
+ *                       type: integer
+ *                       nullable: true
+ *                       example: null
+ *       400:
+ *         description: Bad request (e.g., invalid user ID)
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized (missing or invalid token)
  *       500:
- *         description: Failed to retrieve friends
+ *         description: Internal server error
  */
+
 
 /**
  * @swagger

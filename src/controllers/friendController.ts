@@ -10,22 +10,83 @@ export const getFriends = async (
   res: Response
 ): Promise<void> => {
   try {
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
+    const offset = (page - 1) * limit;
     const userId = req.userId;
 
-    const friendships = await Friendship.find({
-      $or: [{ requester: userId }, { recipient: userId }],
-      status: "accepted",
-    }).populate("requester recipient", "username email avatar status lastSeen");
+    if (!userId) {
+      sendError(res, "User ID not found", "User ID is required", 400);
+      return;
+    }
 
-    const friends = friendships.map((friendship) => {
-      const friend =
-        friendship.requester._id.toString() === userId
-          ? friendship.recipient
-          : friendship.requester;
-      return friend;
+    // Get total count of friends
+    const totalCount = await Friendship.countDocuments({
+      $or: [
+        { requester: userId, status: "accepted" },
+        { recipient: userId, status: "accepted" }
+      ]
     });
 
-    sendSuccess(res, "Friends retrieved successfully", { friends });
+    if (totalCount === 0) {
+      sendSuccess(res, "No friends found", {
+        data: [],
+        pagination: {
+          page,
+          limit,
+          offset,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false
+        }
+      });
+      return;
+    }
+
+    // Get paginated friendships
+    const friendships = await Friendship.find({
+      $or: [
+        { requester: userId, status: "accepted" },
+        { recipient: userId, status: "accepted" }
+      ]
+    })
+      .populate("requester recipient", "username email avatar status lastSeen")
+      .sort({ updatedAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean();
+
+    // Map to friend objects
+    const friends = friendships.map((friendship) => {
+      const friend = friendship.requester._id.toString() === userId 
+        ? friendship.recipient 
+        : friendship.requester;
+      return {
+        ...friend,
+        friendshipId: friendship._id,
+        since: friendship.updatedAt
+      };
+    });
+
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    sendSuccess(res, "Friends retrieved successfully", {
+      data: friends,
+      pagination: {
+        page,
+        limit,
+        offset,
+        total: totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null
+      }
+    });
   } catch (error) {
     console.error("Get friends error:", error);
     sendError(
