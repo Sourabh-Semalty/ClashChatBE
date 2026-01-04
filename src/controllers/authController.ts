@@ -80,7 +80,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = generateRefreshToken({ userId: user._id.toString(), email: user.email });
 
     user.refreshToken = refreshToken;
-    user.status = 'online';
     await user.save();
 
     sendSuccess(res, 'Login successful', {
@@ -144,8 +143,6 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findById(userId);
     if (user) {
       user.refreshToken = undefined;
-      user.status = 'offline';
-      user.lastSeen = new Date();
       await user.save();
     }
 
