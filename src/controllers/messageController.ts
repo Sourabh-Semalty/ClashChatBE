@@ -108,81 +108,162 @@ export const getChats = async (req: Request, res: Response): Promise<void> => {
     const userId = req.userId;
     const { limit = 20, skip = 0 } = req.query;
 
-    const friendships = await Friendship.find({
-      $or: [
-        { requester: userId },
-        { recipient: userId },
-      ],
-      status: 'accepted',
-    })
-      .populate('requester recipient', 'username avatar')
-      .sort({ updatedAt: -1 });
+    if (!userId) {
+      sendError(res, 'User authentication required', 'User ID not found', 401);
+      return;
+    }
 
-    const chats = await Promise.all(
-      friendships.map(async (friendship) => {
-        const friendId = friendship.requester._id.toString() === userId 
-          ? friendship.recipient._id 
-          : friendship.requester._id;
-
-        const friend = friendship.requester._id.toString() === userId 
-          ? friendship.recipient as any
-          : friendship.requester as any;
-
-        const lastMessage = await Message.findOne({
-          $or: [
-            { sender: userId, receiver: friendId },
-            { sender: friendId, receiver: userId },
-          ],
-        })
-          .sort({ createdAt: -1 })
-          .populate('sender receiver', 'username avatar');
-
-        const unreadCount = await Message.countDocuments({
-          sender: friendId,
-          receiver: userId,
-          status: { $ne: 'read' },
-        });
-
-        return {
-          friendId,
-          friend: {
-            _id: friend._id,
-            username: friend.username,
-            avatar: friend.avatar,
+    const chats = await Friendship.aggregate([
+      {
+        $match: {
+          $or: [{ requester: new mongoose.Types.ObjectId(userId) }, { recipient: new mongoose.Types.ObjectId(userId) }],
+          status: 'accepted'
+        }
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          let: {
+            userId: new mongoose.Types.ObjectId(userId),
+            friendId: { 
+              $cond: [
+                { $eq: ['$requester', new mongoose.Types.ObjectId(userId)] }, 
+                '$recipient', 
+                '$requester'
+              ] 
+            }
           },
-          lastMessage: lastMessage ? {
-            _id: lastMessage._id,
-            content: lastMessage.content,
-            messageType: lastMessage.messageType,
-            status: lastMessage.status,
-            createdAt: lastMessage.createdAt,
-            sender: {
-              _id: (lastMessage.sender as any)._id,
-              username: (lastMessage.sender as any).username,
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $and: [{ $eq: ['$sender', '$$userId'] }, { $eq: ['$receiver', '$$friendId'] }] },
+                    { $and: [{ $eq: ['$sender', '$$friendId'] }, { $eq: ['$receiver', '$$userId'] }] }
+                  ]
+                }
+              }
             },
-          } : null,
-          unreadCount,
-          updatedAt: friendship.updatedAt,
-        };
-      })
-    );
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'sender',
+                foreignField: '_id',
+                as: 'sender'
+              }
+            },
+            { $unwind: '$sender' }
+          ],
+          as: 'lastMessage'
+        }
+      },
+      {
+        $match: { 'lastMessage.0': { $exists: true } }
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          let: {
+            userId: new mongoose.Types.ObjectId(userId),
+            friendId: { 
+              $cond: [
+                { $eq: ['$requester', new mongoose.Types.ObjectId(userId)] }, 
+                '$recipient', 
+                '$requester'
+              ] 
+            }
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$sender', '$$friendId'] },
+                    { $eq: ['$receiver', '$$userId'] },
+                    { $ne: ['$status', 'read'] }
+                  ]
+                }
+              }
+            },
+            {
+              $count: 'unreadCount'
+            }
+          ],
+          as: 'unreadCount'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: {
+            friendId: { 
+              $cond: [
+                { $eq: ['$requester', new mongoose.Types.ObjectId(userId)] }, 
+                '$recipient', 
+                '$requester'
+              ] 
+            }
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$_id', '$$friendId'] }
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                avatar: 1
+              }
+            }
+          ],
+          as: 'friend'
+        }
+      },
+      { $unwind: '$friend' },
+      { $unwind: '$lastMessage' },
+      {
+        $project: {
+          friendId: { 
+            $cond: [
+              { $eq: ['$requester', new mongoose.Types.ObjectId(userId)] }, 
+              '$recipient', 
+              '$requester'
+            ] 
+          },
+          friend: 1,
+          lastMessage: {
+            _id: '$lastMessage._id',
+            content: '$lastMessage.content',
+            messageType: '$lastMessage.messageType',
+            status: '$lastMessage.status',
+            createdAt: '$lastMessage.createdAt',
+            sender: {
+              _id: '$lastMessage.sender._id',
+              username: '$lastMessage.sender.username'
+            }
+          },
+          unreadCount: { $ifNull: [{ $arrayElemAt: ['$unreadCount.unreadCount', 0] }, 0] },
+          updatedAt: 1
+        }
+      },
+      { $sort: { 'lastMessage.createdAt': -1 } },
+      { $facet: {
+        chats: [{ $skip: Number(skip) }, { $limit: Number(limit) }],
+        total: [{ $count: 'count' }]
+      }}
+    ]);
 
-    const sortedChats = chats.sort((a, b) => {
-      if (!a.lastMessage && !b.lastMessage) {
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      }
-      if (!a.lastMessage) return 1;
-      if (!b.lastMessage) return -1;
-      return new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime();
-    });
-
-    const paginatedChats = sortedChats
-      .slice(Number(skip), Number(skip) + Number(limit));
+    const paginatedChats = chats[0]?.chats || [];
+    const totalCount = chats[0]?.total[0]?.count || 0;
 
     sendSuccess(res, 'Chats retrieved successfully', {
       chats: paginatedChats,
-      total: chats.length,
-      hasMore: Number(skip) + Number(limit) < chats.length,
+      total: totalCount,
+      hasMore: Number(skip) + Number(limit) < totalCount,
     });
   } catch (error) {
     console.error('Get chats error:', error);
